@@ -20,4 +20,8 @@ public final class ChainInfo {
     public Set<Position> listStones() {
         return stones;
     }
+
+    public Set<Position> listLiberties() {
+        return liberties;
+    }
 }

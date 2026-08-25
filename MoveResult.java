@@ -15,8 +15,8 @@ public class MoveResult {
         return new MoveResult(false, false, StoneColor.EMPTY, message);
     }
 
-    public static MoveResult legalNoCapture() {
-        return new MoveResult(true, false, StoneColor.EMPTY, "OK");
+    public static MoveResult legalNoCapture(String message) {
+        return new MoveResult(true, false, StoneColor.EMPTY, message);
     }
 
     public static MoveResult legalCapture(StoneColor winner) {

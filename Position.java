@@ -1,6 +1,5 @@
 import java.util.Objects;
 
-// Struct-like class
 public final class Position {
     final int row;
     final int col;
@@ -8,6 +7,11 @@ public final class Position {
     public Position(int row, int col) {
         this.row = row;
         this.col = col;
+    }
+
+    @Override
+    public String toString() {
+        return "" + (char)('A' + row) + (col + 1) ;
     }
 
     @Override

@@ -3,7 +3,7 @@ import java.util.*;
 public class Board {
     private final StoneColor[][] grid;
     private final int size;
-    private final  Set<Position> capturedChain;
+    private final Set<Position> capturedChain;
     private final Set<Position> atariChains;
 
     public Board(int size) {
@@ -29,26 +29,45 @@ public class Board {
         if(!isOnBoard(stone)) return MoveResult.illegal("Out of bounds");
         if(!isEmpty(stone)) return MoveResult.illegal("That space is occupied");
 
-        recordStoneOnBoard(stone, player);
-        int playerLiberties = findChain(stone).libertyCount();
+        ChainInfo playerChain = findChain(stone, player);
         for (Position enemyStart : cardinalEnemyNeighbors(stone, player)) {
-            ChainInfo enemyChain = findChain(enemyStart);
-            if (enemyChain.libertyCount() == 0) {
-                setCapturedChain(enemyChain);
+            ChainInfo enemyChain = findChain(enemyStart, player.opponent());
+            if (enemyChain.libertyCount() == 1) {
+                atariChains.removeAll(playerChain.listStones());
+                recordStoneOnBoard(stone, player);
+                capturedChain.addAll(enemyChain.listStones());
                 return MoveResult.legalCapture(player);
-            } else if (enemyChain.libertyCount() == 1 && playerLiberties > 1) {
-                setAtariChains(enemyChain);
+            } else if (enemyChain.libertyCount() == 2 && playerChain.libertyCount() > 1) {
+                atariChains.addAll(enemyChain.listStones());
             }
         }
 
-        ChainInfo libertyResult = findChain(stone);
-        if (libertyResult.libertyCount() < 2) {
-            removeStone(stone);
-            return MoveResult.illegal("Can not place into atari, or self capture");
+        if (playerChain.libertyCount() < 1) {
+            return MoveResult.illegal("Can not place into self capture");
         } else {
-            return MoveResult.legalNoCapture();
+            recordStoneOnBoard(stone, player);
+            if (playerChain.libertyCount() > 1) atariChains.removeAll(playerChain.listStones());
+            else atariChains.add(stone);
+            return MoveResult.legalNoCapture("placed a stone at " + stone.toString());
+        }
+    }
+
+    // A legal move can sometimes depend on if a capture happens and that makes it easier to simulate like this if only checking for the legalness of a move
+    private boolean canPlaceStone(Position candidate, StoneColor player) {
+        Set<Position> capturedSnapshot = new HashSet<>(capturedChain);
+        Set<Position> atariSnapshot = new HashSet<>(atariChains);
+
+        MoveResult result = placeStone(candidate, player);
+        if (result.isLegal()) {
+            removeStone(candidate);
         }
 
+        capturedChain.clear();
+        capturedChain.addAll(capturedSnapshot);
+        atariChains.clear();
+        atariChains.addAll(atariSnapshot);
+
+        return result.isLegal();
     }
 
     private void recordStoneOnBoard(Position stone, StoneColor player) {
@@ -80,32 +99,24 @@ public class Board {
         return isOnBoard(stone) && getStoneAtPos(stone) == StoneColor.EMPTY;
     }
 
-    private ChainInfo findChain(Position start) {
-        StoneColor startColor = getStoneAtPos(start);
+    private ChainInfo findChain(Position start, StoneColor startColor) {
         ChainInfo info = new ChainInfo();
-
-        if (!startColor.isPlayerColor()) return info;
 
         Set<Position> visited = new HashSet<>();
         Deque<Position> frontier = new ArrayDeque<>();
         frontier.add(start);
         visited.add(start);
 
-        while(!frontier.isEmpty()) {
+        while (!frontier.isEmpty()) {
             Position current = frontier.removeFirst();
             info.addStone(current);
 
-            List<Position> neighbors = cardinalNeighbors(current).stream()
-                    .filter(n -> !visited.contains(n))
-                    .toList();
-
-            for (Position neighbor : neighbors) {
+            for (Position neighbor : cardinalNeighbors(current)) {
+                if (visited.contains(neighbor)) continue;
                 StoneColor neighborColor = getStoneAtPos(neighbor);
-                if (neighborColor== StoneColor.EMPTY) {
+                if (neighborColor == StoneColor.EMPTY) {
                     info.addLiberty(neighbor);
-                }
-                else if (neighborColor == startColor) {
-                    atariChains.remove(neighbor);
+                } else if (neighborColor == startColor) {
                     visited.add(neighbor);
                     frontier.addLast(neighbor);
                 }
@@ -115,7 +126,7 @@ public class Board {
     }
 
     private List<Position> cardinalNeighbors(Position start) {
-        List<Position> out = new ArrayList<>(4);
+        List<Position> out = new ArrayList<>();
         Position north = new Position(start.row -1, start.col);
         Position east = new Position(start.row, start.col +1);
         Position south = new Position(start.row + 1, start.col);
@@ -127,25 +138,13 @@ public class Board {
         return out;
     }
 
-    private Set<Position> cardinalEnemyNeighbors(Position origin, StoneColor player) {
-        Set<Position> starts = new HashSet<>();
+    private List<Position> cardinalEnemyNeighbors(Position origin, StoneColor player) {
+        List<Position> starts = new ArrayList<>();
         StoneColor enemy = player.opponent();
         for (Position neighbor : cardinalNeighbors(origin)) {
             if (getStoneAtPos(neighbor) == enemy) starts.add(neighbor);
         }
         return starts;
-    }
-
-    private void setCapturedChain(ChainInfo captured) {
-        for (Position stone : captured.listStones()) {
-            capturedChain.add(stone);
-        }
-    }
-
-    private void setAtariChains(ChainInfo atari) {
-        for (Position stone : atari.listStones()) {
-            atariChains.add(stone);
-        }
     }
 
     public Set<Position> getCatpured() {
@@ -154,5 +153,59 @@ public class Board {
 
     public Set<Position> getAtari() {
         return atariChains;
+    }
+
+    public Position suggestMove(StoneColor player) {
+        List<Position> suggestAtari = new ArrayList<>();
+        List<Position> suggestPressure = new ArrayList<>();
+        List<Position> randomMoves = new ArrayList<>();
+
+        if(!atariChains.isEmpty()) {
+            for(Position atariCheck: atariChains) {
+                if (getStoneAtPos(atariCheck) == player) {
+                    ChainInfo atariChain = findChain(atariCheck, player);
+                    return atariChain.listLiberties().iterator().next();
+                }
+            }
+        }
+
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                Position candidate = new Position(row, col);
+                if (!isEmpty(candidate)) continue;
+
+                List<Position> enemyStarts = cardinalEnemyNeighbors(candidate, player);
+                if (!canPlaceStone(candidate, player)) continue;
+                if (enemyStarts.isEmpty()) {
+                    randomMoves.add(candidate);
+                    continue;
+                }
+
+                boolean capturesEnemy = false;
+                boolean putsInAtari = false;
+                for (Position enemyStart : enemyStarts) {
+                    int enemyLiberties = findChain(enemyStart, player.opponent()).libertyCount();
+                    if (enemyLiberties == 1) capturesEnemy = true;
+                    else if (enemyLiberties == 2) putsInAtari = true;
+                }
+
+                if (capturesEnemy) return candidate;
+                if (putsInAtari) suggestAtari.add(candidate);
+                else suggestPressure.add(candidate);
+            }
+        }
+
+        if (!suggestAtari.isEmpty()) {
+            Collections.shuffle(suggestAtari);
+            return suggestAtari.getFirst();
+        }
+        else if (!suggestPressure.isEmpty()) {
+            Collections.shuffle(suggestPressure);
+            return suggestPressure.getFirst();
+        }
+        else {
+            Collections.shuffle(randomMoves);
+            return randomMoves.getFirst();
+        }
     }
 }

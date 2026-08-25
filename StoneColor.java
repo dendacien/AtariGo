@@ -3,7 +3,7 @@ public enum StoneColor {
     BLACK("(B)"),
     WHITE("(W)");
 
-    public final String symbol;
+    private final String symbol;
 
     StoneColor(String symbol) {
         this.symbol = symbol;
