@@ -1,3 +1,4 @@
+package src;
 public enum StoneColor {
     EMPTY("   "),
     BLACK("(B)"),

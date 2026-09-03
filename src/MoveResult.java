@@ -1,3 +1,4 @@
+package src;
 public class MoveResult {
     private final boolean legal;
     private final boolean capture;

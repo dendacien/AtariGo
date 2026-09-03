@@ -1,3 +1,4 @@
+package src;
 public class Player {
     private final StoneColor color;
     private final String name;

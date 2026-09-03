@@ -1,3 +1,4 @@
+package src;
 import java.util.Objects;
 
 public final class Position {
@@ -16,7 +17,8 @@ public final class Position {
 
     @Override
     public boolean equals(Object o) {
-        if(!(o instanceof Position p)) return false;
+        if(!(o instanceof Position)) return false;
+        Position p = (Position) o;
         return row == p.row && col == p.col;
     }
 

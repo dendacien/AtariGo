@@ -1,3 +1,4 @@
+package src;
 import java.util.Scanner;
 
 public class Main {
@@ -9,11 +10,11 @@ public class Main {
         scan.nextLine();
         System.out.print("Name for Player 1 (default Slate): ");
         String playerName1 = scan.nextLine();
-        if (playerName1.isBlank()) playerName1 = "Slate";
+        if (playerName1.isEmpty()) playerName1 = "Slate";
         Player slatePlayer = new Player(StoneColor.BLACK, playerName1);
         System.out.print("Name for Player 2 (default Shell)(enter Computer for a bot): ");
         String playerName2 = scan.nextLine();
-        if (playerName2.isBlank()) playerName2 = "Shell";
+        if (playerName2.isEmpty()) playerName2 = "Shell";
         Player shellPlayer = new Player(StoneColor.WHITE, playerName2);
         Match match = new Match(scan, slatePlayer, shellPlayer);
         match.startGame();

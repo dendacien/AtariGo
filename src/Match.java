@@ -1,3 +1,4 @@
+package src;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -50,7 +51,7 @@ public class Match {
             printBoard(size);
             MoveResult result = MoveResult.illegal("");
             while (!result.isLegal()) {
-                if (!result.getMessage().isBlank()) System.out.println(result.getMessage());
+                if (!result.getMessage().isEmpty()) System.out.println(result.getMessage());
                 Position placement = captureInput(currentPlayer);
                 if (placement.row == -1 && placement.col == -1) {
                     currentGame.endGame();
@@ -64,7 +65,7 @@ public class Match {
                     return;
                 }
             }
-            if (!result.getMessage().isBlank()) System.out.println(result.getMessage());
+            if (!result.getMessage().isEmpty()) System.out.println(result.getMessage());
         }
     }
 
@@ -75,7 +76,7 @@ public class Match {
         while (returnPosition == null) {
             captureCol = 0;
             captureRow = 0;
-            if (!result.getMessage().isBlank()) System.out.println(result.getMessage());
+            if (!result.getMessage().isEmpty()) System.out.println(result.getMessage());
             String playerSymbol = currentPlayer.getSymbol();
             if (playerSymbol.contains("B")) playerSymbol = PURPLE + playerSymbol + RESET;
             else playerSymbol = CYAN + playerSymbol + RESET;
@@ -145,11 +146,14 @@ public class Match {
     }
 
     public Player getPlayerByColor(StoneColor inColor) {
-        return switch(inColor) {
-            case BLACK -> slatePlayer;
-            case WHITE -> shellPlayer;
-            default -> throw new IllegalArgumentException("EMPTY has no player");
-        };
+        switch(inColor) {
+            case BLACK:
+                return slatePlayer;
+            case WHITE:
+                return shellPlayer;
+            default:
+                throw new IllegalArgumentException("EMPTY has no player");
+        }
     }
 
     private void endScore(StoneColor winner) {
@@ -167,7 +171,7 @@ public class Match {
         if (winner != StoneColor.EMPTY) {
             System.out.print("Play another round? ");
             String answer = input.nextLine();
-            if (!answer.isBlank() && (answer.charAt(0) == 'y' || answer.charAt(0) == 'Y')) startGame();
+            if (!answer.isEmpty() && (answer.charAt(0) == 'y' || answer.charAt(0) == 'Y')) startGame();
         }
     }
 

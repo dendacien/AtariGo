@@ -1,3 +1,4 @@
+package src;
 import java.util.*;
 
 public class Board {
@@ -197,15 +198,15 @@ public class Board {
 
         if (!suggestAtari.isEmpty()) {
             Collections.shuffle(suggestAtari);
-            return suggestAtari.getFirst();
+            return suggestAtari.get(0);
         }
         else if (!suggestPressure.isEmpty()) {
             Collections.shuffle(suggestPressure);
-            return suggestPressure.getFirst();
+            return suggestPressure.get(0);
         }
         else {
             Collections.shuffle(randomMoves);
-            return randomMoves.getFirst();
+            return randomMoves.get(0);
         }
     }
 }
