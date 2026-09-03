@@ -1,5 +1,11 @@
 package test;
 
+import src.Board;
+import src.Game;
+import src.MoveResult;
+import src.Position;
+import src.StoneColor;
+
 public final class GameTest {
     private int assertions;
 
