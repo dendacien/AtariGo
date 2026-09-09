@@ -1,0 +1,31 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "build tests",
+            "type": "shell",
+            "command": "make build/game_test",
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "./run_tests.sh",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        }
+    ]
+}
